@@ -1,5 +1,10 @@
-import { nanoid } from "nanoid";
+import { createAttachmentKey, type Attachment } from "svelte/attachments";
 import { keys } from "./object";
+
+let id = 0;
+export function createId() {
+	return `melt-${id++}`;
+}
 
 type DataIds<Name extends string, Parts extends string[]> = {
 	[P in Parts[number]]: `data-melt-${Name}-${P}`;
@@ -23,12 +28,11 @@ export function createDataIds<const Name extends string, const Parts extends str
 
 type Ids<T extends DataIds<string, string[]>> = { [P in keyof T]: string };
 export function createIds<const T extends DataIds<string, string[]>>(identifiers: T): Ids<T> {
-	const id = nanoid();
+	const id = createId();
 
 	return Object.keys(identifiers).reduce((acc, key) => {
 		acc[key] = `${key}-${id}`;
 		return acc;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	}, {} as any);
 }
 
@@ -42,6 +46,11 @@ export type BuilderMetadata<Name extends string, Parts extends string[]> = {
 	createIds: () => {
 		[P in Parts[number]]: string;
 	};
+	createReferences: () => {
+		get: (key: Parts[number]) => HTMLElement | undefined;
+		attach: (key: Parts[number]) => Attachment<HTMLElement>;
+		key: any;
+	};
 };
 
 export function createBuilderMetadata<const Name extends string, const Parts extends string[]>(
@@ -53,12 +62,30 @@ export function createBuilderMetadata<const Name extends string, const Parts ext
 	const dataSelectors = keys(dataAttrs).reduce((acc, key) => {
 		acc[key] = `[${dataAttrs[key]}]`;
 		return acc;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	}, {} as any);
 
 	return {
 		dataAttrs,
 		dataSelectors,
 		createIds: () => createIds(dataAttrs),
+		createReferences: () => createReferences<Parts>(),
+	};
+}
+
+export function createReferences<const Parts extends string[]>() {
+	const refs = new Map<Parts[number], HTMLElement>();
+	const ak = createAttachmentKey();
+
+	return {
+		get(key: Parts[number]): HTMLElement | undefined {
+			return refs.get(key);
+		},
+		attach(key: Parts[number]): Attachment<HTMLElement> {
+			return (node) => {
+				refs.set(key, node);
+				return () => refs.delete(key);
+			};
+		},
+		key: ak,
 	};
 }

@@ -1,20 +1,23 @@
 import { Synced } from "$lib/Synced.svelte";
 import type { MaybeGetter } from "$lib/types";
-import { dataAttr } from "$lib/utils/attribute";
+import { dataAttr, styleAttr } from "$lib/utils/attribute";
 import { extract } from "$lib/utils/extract";
-import { createBuilderMetadata } from "$lib/utils/identifiers";
+import { createBuilderMetadata, createId } from "$lib/utils/identifiers";
 import { isFunction, isHtmlElement } from "$lib/utils/is";
-import { deepMerge } from "$lib/utils/merge";
 import { autoOpenPopover, safelyHidePopover } from "$lib/utils/popover";
 import {
 	useFloating,
 	type UseFloatingArgs,
 	type UseFloatingConfig,
 } from "$lib/utils/use-floating.svelte";
-import { nanoid } from "nanoid";
-import { useEventListener } from "runed";
-import { tick } from "svelte";
+import { size, type ElementRects } from "@floating-ui/dom";
+import { dequal } from "dequal";
+import { watch } from "runed";
+import { createAttachmentKey, type Attachment } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
+import { on } from "svelte/events";
+import * as focusTrap from "focus-trap"; // ESM
+import { untrack } from "svelte";
 
 const { dataAttrs, dataSelectors } = createBuilderMetadata("popover", [
 	"trigger",
@@ -28,6 +31,12 @@ type CloseOnOutsideClickProp = MaybeGetter<boolean | CloseOnOutsideClickCheck | 
 export const isCloseOnOutsideClickCheck = (
 	value: CloseOnOutsideClickProp,
 ): value is CloseOnOutsideClickCheck => isFunction(value) && value.length === 1;
+
+function getHtmlElement(el: string | HTMLElement): HTMLElement | undefined {
+	const elm = typeof el === "string" ? document.querySelector(el) : el;
+	if (!isHtmlElement(elm)) return undefined;
+	return elm;
+}
 
 export type PopoverProps = {
 	/**
@@ -82,11 +91,36 @@ export type PopoverProps = {
 	 * @default true
 	 */
 	closeOnOutsideClick?: CloseOnOutsideClickProp;
+
+	focus?: {
+		/**
+		 * Which element to focus when the popover opens.
+		 * Can be a selector string, an element, or a Getter for those.
+		 * If null, the focus remains on the trigger element.
+		 *
+		 * Defaults to the popover content element.
+		 */
+		onOpen?: MaybeGetter<HTMLElement | string | null | undefined>;
+
+		/**
+		 * Which element to focus when the popover closes.
+		 * Can be a selector string, an element, or a Getter for those.
+		 * If null, the focus goes to the document body.
+		 *
+		 * Defaults to the last used trigger element.
+		 */
+		onClose?: MaybeGetter<HTMLElement | string | null | undefined>;
+
+		/**
+		 * If focus should be trapped inside the popover content when open.
+		 *
+		 * @default false
+		 */
+		trap?: MaybeGetter<boolean | undefined>;
+	};
 };
 
 export class BasePopover {
-	ids = $state({ invoker: nanoid(), popover: nanoid() });
-
 	/* Props */
 	#props!: PopoverProps;
 	forceVisible = $derived(extract(this.#props.forceVisible, false));
@@ -95,12 +129,50 @@ export class BasePopover {
 	closeOnOutsideClick = $derived(extract(this.#props.closeOnOutsideClick, true));
 	floatingConfig = $derived.by(() => {
 		const config = extract(this.#props.floatingConfig, {} satisfies UseFloatingConfig);
+
 		const sameWidth = extract(this.#props.sameWidth);
-		const merged = deepMerge(config, sameWidth !== undefined ? { sameWidth } : {});
-		return merged;
+		if (sameWidth !== undefined) {
+			config.sameWidth = sameWidth;
+		}
+
+		config.computePosition = {
+			...config.computePosition,
+			middleware: [
+				...(config.computePosition?.middleware ?? []),
+				size({
+					apply: ({ availableWidth, availableHeight }) => {
+						this.availableWidth = availableWidth;
+						this.availableHeight = availableHeight;
+					},
+				}),
+				{
+					name: "grabInvokerRect",
+					fn: ({ rects }) => {
+						const prev = $state.snapshot(this.invokerRect);
+						const curr = rects.reference;
+						if (dequal(prev, curr)) return {};
+						this.invokerRect = rects.reference;
+						return {};
+					},
+				},
+			],
+		};
+
+		return config;
 	});
 
+	focus = $derived.by(() => ({
+		onOpen: extract(this.#props.focus?.onOpen, `#${this.ids.popover}`),
+		onClose: extract(this.#props.focus?.onClose, this.triggerEl),
+		trap: extract(this.#props.focus?.trap, false),
+	}));
+
 	/* State */
+	ids = $state({ popover: createId() });
+	invokerRect = $state<ElementRects["reference"]>();
+	availableWidth = $state<number>();
+	availableHeight = $state<number>();
+	triggerEl: HTMLElement | null = $state(null);
 	#open!: Synced<boolean>;
 
 	constructor(props: PopoverProps = {}) {
@@ -143,10 +215,10 @@ export class BasePopover {
 			},
 
 			onfocusout: async (event: FocusEvent) => {
+				if (!this.triggerEl) return;
 				await new Promise((r) => setTimeout(r, 0));
 
 				const contentEl = document.getElementById(this.ids.popover);
-				const triggerEl = document.getElementById(this.ids.invoker);
 				const relatedTarget = event.relatedTarget as Element | null;
 
 				// Use the related target from the event when possible
@@ -159,7 +231,7 @@ export class BasePopover {
 				if (
 					!targetElement ||
 					contentEl?.contains(targetElement) ||
-					triggerEl?.contains(targetElement) ||
+					this.triggerEl?.contains(targetElement) ||
 					!this.#shouldClose(targetElement)
 				) {
 					return;
@@ -167,23 +239,45 @@ export class BasePopover {
 
 				this.open = false;
 			},
+			style: styleAttr({
+				"--melt-invoker-width": `${this.invokerRect?.width ?? 0}px`,
+				"--melt-invoker-height": `${this.invokerRect?.height ?? 0}px`,
+				"--melt-invoker-x": `${this.invokerRect?.x ?? 0}px`,
+				"--melt-invoker-y": `${this.invokerRect?.y ?? 0}px`,
+				"--melt-popover-available-width": `${this.availableWidth ?? 0}px`,
+				"--melt-popover-available-height": `${this.availableHeight ?? 0}px`,
+			}),
 		} satisfies HTMLAttributes<HTMLElement>;
 	}
+
+	#triggerAttachmentKey = createAttachmentKey();
+	#triggerAttachment: Attachment<HTMLElement> = (node) => {
+		if (untrack(() => this.triggerEl)) return;
+
+		this.triggerEl = node;
+		return () => {
+			if (this.triggerEl !== node) return;
+			this.triggerEl = null;
+		};
+	};
 
 	/** The trigger that toggles the value. */
 	protected getInvoker() {
 		return {
-			id: this.ids.invoker,
+			// @ts-expect-error - we're a bit more permissive here
 			popovertarget: this.ids.popover,
 			onclick: (e: Event) => {
 				e.preventDefault();
+				this.triggerEl = e.currentTarget as HTMLElement;
 				this.open = !this.open;
 			},
 			...this.sharedProps,
-		} as const;
+			[this.#triggerAttachmentKey]: this.#triggerAttachment,
+		} as const satisfies HTMLAttributes<HTMLElement>;
 	}
 
-	protected getPopover() {
+	#popoverAttachmentKey = createAttachmentKey();
+	#popoverAttachment: Attachment<HTMLElement> = (node) => {
 		// Show and hide popover based on open state
 		const isVisible = $derived(this.open || this.forceVisible);
 		$effect(() => {
@@ -199,9 +293,33 @@ export class BasePopover {
 			}
 		});
 
+		watch(
+			() => this.open,
+			(open) => {
+				setTimeout(() => {
+					const selector = open ? this.focus.onOpen : this.focus.onClose;
+					if (!selector) return;
+					const el = getHtmlElement(selector);
+					el?.focus();
+				});
+			},
+			{ lazy: true },
+		);
+
+		const trap = focusTrap.createFocusTrap(node, {
+			allowOutsideClick: true,
+			clickOutsideDeactivates: true,
+		});
+		$effect(() => {
+			if (!this.open || !this.focus.trap) return;
+			trap.activate();
+
+			return () => trap.deactivate();
+		});
+
 		$effect(() => {
 			const contentEl = document.getElementById(this.ids.popover);
-			const triggerEl = document.getElementById(this.ids.invoker);
+			const triggerEl = this.triggerEl;
 			if (!isHtmlElement(contentEl) || !isHtmlElement(triggerEl) || !this.open) {
 				return;
 			}
@@ -213,10 +331,8 @@ export class BasePopover {
 			});
 		});
 
-		useEventListener(
-			() => document,
-			"keydown",
-			(e) => {
+		const offs = [
+			on(document, "keydown", (e) => {
 				if (!this.closeOnEscape) return;
 				const el = document.getElementById(this.ids.popover);
 				if (e.key !== "Escape" || !this.open || !isHtmlElement(el)) return;
@@ -231,17 +347,13 @@ export class BasePopover {
 				if (openPopovers.length) return;
 				// Set timeout to give time to all event listeners to run
 				setTimeout(() => (this.open = false));
-			},
-		);
+			}),
 
-		useEventListener(
-			() => document,
-			"click",
-			(e) => {
+			on(document, "click", (e) => {
 				if (!this.open) return; // Exit early if not open
 
 				const contentEl = document.getElementById(this.ids.popover);
-				const triggerEl = document.getElementById(this.ids.invoker);
+				const triggerEl = this.triggerEl;
 
 				if (!contentEl || !triggerEl) return; // Exit if elements are missing
 
@@ -252,9 +364,13 @@ export class BasePopover {
 				if (isInsideContent || isInsideTrigger) return; // Exit if clicked inside
 
 				if (this.#shouldClose(target)) this.open = false;
-			},
-		);
+			}),
+		];
 
+		return () => offs.forEach((off) => off());
+	};
+
+	protected getPopover() {
 		return {
 			id: this.ids.popover,
 			popover: "manual",
@@ -268,6 +384,7 @@ export class BasePopover {
 			tabindex: -1,
 			inert: !this.open,
 			"data-open": dataAttr(this.open),
+			[this.#popoverAttachmentKey]: this.#popoverAttachment,
 			...this.sharedProps,
 		} as const satisfies HTMLAttributes<HTMLElement>;
 	}
@@ -293,7 +410,7 @@ export class Popover extends BasePopover {
 
 	constructor(props: PopoverProps = {}) {
 		super({ ...props });
-		this.ids = { ...this.ids, trigger: this.ids.invoker, content: this.ids.popover };
+		this.ids = { ...this.ids, content: this.ids.popover };
 	}
 
 	/** The trigger that toggles the value. */

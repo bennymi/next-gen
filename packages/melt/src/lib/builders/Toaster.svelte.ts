@@ -1,12 +1,12 @@
 import type { MaybeGetter } from "$lib/types";
 import { extract } from "$lib/utils/extract";
-import { createBuilderMetadata } from "$lib/utils/identifiers";
+import { createBuilderMetadata, createId } from "$lib/utils/identifiers";
 import type { HTMLAttributes } from "svelte/elements";
 import { SvelteMap } from "svelte/reactivity";
 import { isHtmlElement, isTouch } from "../utils/is";
 import { AnimationFrames } from "$lib/utils/animation-frames.svelte";
 import { safelyHidePopover, safelyShowPopover } from "$lib/utils/popover";
-import { watch } from "runed";
+import { useEventListener, watch } from "runed";
 
 const toasterMeta = createBuilderMetadata("toaster", ["root"]);
 
@@ -38,9 +38,44 @@ export type ToasterProps = {
 	 * @default 'pause'
 	 */
 	hover?: MaybeGetter<"pause" | "pause-all" | null | undefined>;
+
+	/**
+	 * The behaviour when the user switches to another tab.
+	 * Pass in `null` to disable.
+	 *
+	 * @default 'pause-all'
+	 */
+	tabHidden?: MaybeGetter<"pause-all" | null | undefined>;
 };
 
-export type AddToastProps<T = object> = {
+export type AddToastArgs<T = object> = {
+	/**
+	 * The id of the toast. If undefined, a random one will be generated
+	 */
+	id?: string;
+	/**
+	 * The delay in milliseconds before the toast closes. Set to 0 to disable.
+	 * If `undefined`, uses the `closeDelay` defined in the parent toaster.
+	 */
+	closeDelay?: number;
+
+	/**
+	 * The sensitivity of the toast for accessibility purposes.
+	 * If `undefined`, uses the `type` defined in the parent toaster.
+	 */
+	type?: "assertive" | "polite";
+
+	/**
+	 * The data passed to the toaster.
+	 */
+	data: T;
+};
+
+export type UpdateToastArgs<T = object> = {
+	/**
+	 * The id of the toast.
+	 */
+	id: string;
 	/**
 	 * The delay in milliseconds before the toast closes. Set to 0 to disable.
 	 * If `undefined`, uses the `closeDelay` defined in the parent toaster.
@@ -66,6 +101,7 @@ export class Toaster<T = object> {
 	closeDelay = $derived(extract(this.#props.closeDelay, 5000));
 	type = $derived(extract(this.#props.type, "polite"));
 	hover = $derived(extract(this.#props.hover, "pause"));
+	tabHidden = $derived(extract(this.#props.tabHidden, "pause-all"));
 
 	// State
 	#toastsMap = new SvelteMap<string, Toast<T>>();
@@ -82,14 +118,14 @@ export class Toaster<T = object> {
 	/**
 	 * Adds a toast.
 	 */
-	addToast = (props: AddToastProps<T>) => {
+	addToast = (props: AddToastArgs<T>) => {
 		const propsWithDefaults = {
 			closeDelay: this.closeDelay,
 			type: this.type,
 			...props,
-		} satisfies AddToastProps<T>;
+		} satisfies AddToastArgs<T>;
 
-		const id = window.crypto.randomUUID();
+		const id = props.id ?? createId();
 
 		const toast = new Toast({
 			toaster: this,
@@ -118,12 +154,36 @@ export class Toaster<T = object> {
 	 * @param id The id of the toast.
 	 * @param data The updated data.
 	 */
-	updateToast = (id: string, data: T) => {
-		const toast = this.#toastsMap.get(id);
+	updateToast = (args: UpdateToastArgs<T>) => {
+		const toast = this.#toastsMap.get(args.id);
 		if (!toast) return;
 
-		toast.data = data;
+		toast.data = args.data;
+		if (typeof args.closeDelay === "number") toast.closeDelay = args.closeDelay;
+		if (typeof args.type === "string") toast.type = args.type;
 	};
+
+	/**
+	 * Pauses all toasts.
+	 */
+	pauseAll() {
+		this.toasts.forEach((t) => t.pause());
+	}
+
+	/**
+	 * Resumes all toasts countdowns.
+	 */
+	resumeAll() {
+		this.toasts.forEach((t) => t.resume());
+	}
+
+	#onVisibilityChange() {
+		if (this.tabHidden === "pause-all" && document.hidden) {
+			this.pauseAll();
+		} else {
+			this.resumeAll();
+		}
+	}
 
 	/**
 	 * Spread attributes for the container of the toasts.
@@ -153,6 +213,8 @@ export class Toaster<T = object> {
 					});
 				},
 			);
+
+			useEventListener(document, "visibilitychange", this.#onVisibilityChange.bind(this));
 		}
 
 		return {
@@ -194,8 +256,8 @@ class Toast<T = object> {
 	readonly id = $derived(this.#props.id);
 	/** The original data you passed to the `addToast` function. */
 	data: T = $state() as T;
-	readonly closeDelay = $derived(this.#props.closeDelay);
-	readonly type = $derived(this.#props.type);
+	closeDelay = $derived(this.#props.closeDelay);
+	type = $derived(this.#props.type);
 
 	/** State */
 	ids = toastMeta.createIds();

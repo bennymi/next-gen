@@ -1,15 +1,21 @@
 import { Synced } from "$lib/Synced.svelte";
 import type { MaybeGetter } from "$lib/types";
-import { dataAttr } from "$lib/utils/attribute";
+import { dataAttr, styleAttr } from "$lib/utils/attribute";
 import { extract } from "$lib/utils/extract";
 import { createBuilderMetadata } from "$lib/utils/identifiers";
 import { isHtmlElement } from "$lib/utils/is";
 import { isPointerInGraceArea } from "$lib/utils/pointer";
 import { computeConvexHull, getPointsFromEl } from "$lib/utils/polygon";
 import { autoOpenPopover, safelyHidePopover } from "$lib/utils/popover.js";
-import { useFloating, type UseFloatingArgs } from "$lib/utils/use-floating.svelte";
-import type { ComputePositionReturn } from "@floating-ui/dom";
+import {
+	useFloating,
+	type UseFloatingArgs,
+	type UseFloatingConfig,
+} from "$lib/utils/use-floating.svelte";
+import type { ComputePositionReturn, ElementRects } from "@floating-ui/dom";
+import { dequal } from "dequal";
 import { useEventListener, watch } from "runed";
+import { createAttachmentKey } from "svelte/attachments";
 import type { HTMLAttributes } from "svelte/elements";
 import { on } from "svelte/events";
 
@@ -81,7 +87,8 @@ export type TooltipProps = {
 };
 
 export class Tooltip {
-	#ids = createIds();
+	ids = $state(createIds());
+	invokerRect = $state<ElementRects["reference"]>();
 
 	/** Props */
 	#props!: TooltipProps;
@@ -90,7 +97,28 @@ export class Tooltip {
 	closeDelay = $derived(extract(this.#props.closeDelay, 0));
 	disableHoverableContent = $derived(extract(this.#props.disableHoverableContent, false));
 	forceVisible = $derived(extract(this.#props.forceVisible, false));
-	floatingConfig = $derived(extract(this.#props.floatingConfig));
+	floatingConfig = $derived.by(() => {
+		const config = extract(this.#props.floatingConfig, {} satisfies UseFloatingConfig);
+
+		config.computePosition = {
+			...config.computePosition,
+			middleware: [
+				...(config.computePosition?.middleware ?? []),
+				{
+					name: "grabInvokerRect",
+					fn: ({ rects }) => {
+						const prev = $state.snapshot(this.invokerRect);
+						const curr = rects.reference;
+						if (dequal(prev, curr)) return {};
+						this.invokerRect = rects.reference;
+						return {};
+					},
+				},
+			],
+		};
+
+		return config;
+	});
 
 	/** State */
 	isVisible = $derived(this.open || this.forceVisible);
@@ -105,8 +133,8 @@ export class Tooltip {
 	#floatingData = $state<ComputePositionReturn>();
 
 	get graceAreaPolygon() {
-		const contentEl = document.getElementById(this.#ids.content);
-		const triggerEl = document.getElementById(this.#ids.trigger);
+		const contentEl = document.getElementById(this.ids.content);
+		const triggerEl = document.getElementById(this.ids.trigger);
 		if (!contentEl || !triggerEl) {
 			return [];
 		}
@@ -156,8 +184,8 @@ export class Tooltip {
 			if (!this.open || typeof document === "undefined") return;
 
 			return on(document, "mousemove", (e) => {
-				const contentEl = document.getElementById(this.#ids.content);
-				const triggerEl = document.getElementById(this.#ids.trigger);
+				const contentEl = document.getElementById(this.ids.content);
+				const triggerEl = document.getElementById(this.ids.trigger);
 				if (!contentEl || !triggerEl) {
 					if (this.open) this.#closeTooltip();
 					return;
@@ -217,8 +245,8 @@ export class Tooltip {
 		return {
 			onfocusout: async () => {
 				await new Promise((r) => setTimeout(r)); // tick
-				const contentEl = document.getElementById(this.#ids.content);
-				const triggerEl = document.getElementById(this.#ids.trigger);
+				const contentEl = document.getElementById(this.ids.content);
+				const triggerEl = document.getElementById(this.ids.trigger);
 
 				if (
 					contentEl?.contains(document.activeElement) ||
@@ -228,21 +256,20 @@ export class Tooltip {
 				}
 				this.open = false;
 			},
+			style: styleAttr({
+				"--melt-invoker-width": `${this.invokerRect?.width ?? 0}px`,
+				"--melt-invoker-height": `${this.invokerRect?.height ?? 0}px`,
+				"--melt-invoker-x": `${this.invokerRect?.x ?? 0}px`,
+				"--melt-invoker-y": `${this.invokerRect?.y ?? 0}px`,
+			}),
 		};
 	}
 
 	get trigger() {
-		$effect(() => {
-			const el = document.getElementById(this.#ids.content);
-			if (!isHtmlElement(el)) return;
-
-			return () => (this.#isPointerInsideTrigger = false);
-		});
-
 		return {
 			[dataAttrs.trigger]: "",
-			id: this.#ids.trigger,
-			"aria-describedby": this.#ids.content,
+			id: this.ids.trigger,
+			"aria-describedby": this.ids.content,
 			"data-open": dataAttr(this.open),
 			onpointerdown: () => {
 				if (!this.closeOnPointerDown) return;
@@ -272,85 +299,23 @@ export class Tooltip {
 				this.#openTooltip("focus");
 			},
 			onblur: () => this.#closeTooltip(true),
+			[createAttachmentKey()]: () => {
+				const el = document.getElementById(this.ids.content);
+				if (!isHtmlElement(el)) return;
+
+				return () => (this.#isPointerInsideTrigger = false);
+			},
 			...this.#sharedProps,
 		} as const satisfies HTMLAttributes<HTMLElement>;
 	}
 
 	get content() {
-		$effect(() => {
-			const triggerEl = document.getElementById(this.#ids.trigger);
-			const contentEl = document.getElementById(this.#ids.content);
-
-			if (!triggerEl || !contentEl || !this.open) return;
-
-			useFloating({
-				node: () => triggerEl,
-				floating: () => contentEl,
-				config: {
-					...this.floatingConfig,
-					onCompute: ({ floatingApply, arrowApply, ...data }) => {
-						this.#floatingData = data;
-						if (this.floatingConfig?.onCompute) {
-							this.floatingConfig.onCompute({ floatingApply, arrowApply, ...data });
-						} else {
-							floatingApply();
-							arrowApply();
-						}
-					},
-				},
-			});
-		});
-
-		$effect(() => {
-			const triggerEl = document.getElementById(this.#ids.trigger);
-			const contentEl = document.getElementById(this.#ids.content);
-
-			if (!triggerEl || !contentEl) return;
-
-			if (!this.isVisible) {
-				safelyHidePopover(contentEl);
-				return () => (this.#isPointerInsideContent = false);
-			}
-
-			return autoOpenPopover({ el: contentEl });
-		});
-
-		useEventListener(
-			() => document,
-			"scroll",
-			(e) => this.#handleScroll(e),
-			{ capture: true },
-		);
-
-		useEventListener(
-			() => document,
-			"keydown",
-			(e) => {
-				const el = document.getElementById(this.#ids.content);
-				if (e.key !== "Escape" || !this.open || !el) return;
-
-				e.preventDefault();
-				const openTooltips = [...el.querySelectorAll("[popover]")].filter((child) => {
-					if (!isHtmlElement(child)) return false;
-					// If child is a Melt popover, check if it's open
-					if (child.matches(dataSelectors.content)) return child.dataset.open !== undefined;
-					return child.matches(":popover-open");
-				});
-
-				if (openTooltips.length) return;
-
-				this.#stopOpening();
-				setTimeout(() => (this.open = false));
-			},
-		);
-
 		return {
 			[dataAttrs.content]: "",
-			id: this.#ids.content,
+			id: this.ids.content,
 			popover: "manual",
 			role: "tooltip",
 			tabindex: -1,
-			style: `overflow: visible;`,
 			inert: !this.open,
 			"data-open": dataAttr(this.open),
 			onpointerenter: () => {
@@ -361,14 +326,83 @@ export class Tooltip {
 				this.#isPointerInsideContent = false;
 			},
 			onpointerdown: () => this.#openTooltip("pointer"),
+			[createAttachmentKey()]: () => {
+				$effect(() => {
+					const triggerEl = document.getElementById(this.ids.trigger);
+					const contentEl = document.getElementById(this.ids.content);
+
+					if (!triggerEl || !contentEl || !this.open) return;
+
+					useFloating({
+						node: () => triggerEl,
+						floating: () => contentEl,
+						config: {
+							...this.floatingConfig,
+							onCompute: ({ floatingApply, arrowApply, ...data }) => {
+								this.#floatingData = data;
+								if (this.floatingConfig?.onCompute) {
+									this.floatingConfig.onCompute({ floatingApply, arrowApply, ...data });
+								} else {
+									floatingApply();
+									arrowApply();
+								}
+							},
+						},
+					});
+				});
+
+				$effect(() => {
+					const triggerEl = document.getElementById(this.ids.trigger);
+					const contentEl = document.getElementById(this.ids.content);
+
+					if (!triggerEl || !contentEl) return;
+
+					if (!this.isVisible) {
+						safelyHidePopover(contentEl);
+						return () => (this.#isPointerInsideContent = false);
+					}
+
+					return autoOpenPopover({ el: contentEl });
+				});
+
+				useEventListener(
+					() => document,
+					"scroll",
+					(e) => this.#handleScroll(e),
+					{ capture: true },
+				);
+
+				useEventListener(
+					() => document,
+					"keydown",
+					(e) => {
+						const el = document.getElementById(this.ids.content);
+						if (e.key !== "Escape" || !this.open || !el) return;
+
+						e.preventDefault();
+						const openTooltips = [...el.querySelectorAll("[popover]")].filter((child) => {
+							if (!isHtmlElement(child)) return false;
+							// If child is a Melt popover, check if it's open
+							if (child.matches(dataSelectors.content)) return child.dataset.open !== undefined;
+							return child.matches(":popover-open");
+						});
+
+						if (openTooltips.length) return;
+
+						this.#stopOpening();
+						setTimeout(() => (this.open = false));
+					},
+				);
+			},
 			...this.#sharedProps,
+			style: this.#sharedProps.style + `overflow: visible;`,
 		} as const satisfies HTMLAttributes<HTMLElement>;
 	}
 
 	get arrow() {
 		return {
 			[dataAttrs.arrow]: "",
-			id: this.#ids.arrow,
+			id: this.ids.arrow,
 			"data-arrow": "",
 			"aria-hidden": true,
 			"data-open": dataAttr(this.open),
@@ -398,7 +432,7 @@ export class Tooltip {
 	}
 
 	#closeTooltip(isBlur?: boolean) {
-		const contentEl = document.getElementById(this.#ids.content);
+		const contentEl = document.getElementById(this.ids.content);
 		if (!isHtmlElement(contentEl)) return;
 
 		this.#stopOpening();
@@ -424,7 +458,7 @@ export class Tooltip {
 		const target = e.target;
 		if (!(target instanceof Element) && !(target instanceof Document)) return;
 
-		const triggerEl = document.getElementById(this.#ids.trigger);
+		const triggerEl = document.getElementById(this.ids.trigger);
 		if ((triggerEl && target.contains(triggerEl)) || this.open) {
 			this.#closeTooltip();
 		}

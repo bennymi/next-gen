@@ -67,14 +67,76 @@
         "description": "Checks if an item is currently expanded\n@param id - ID of the item to check"
       },
       {
+        "name": "getItem",
+        "type": "(id: string) => I | undefined",
+        "description": ""
+      },
+      {
+        "name": "getItemId",
+        "type": "(id: string) => string",
+        "description": "Gets the DOM ID for a specific tree item\n@param id - ID of the item"
+      },
+      {
+        "name": "getItemEl",
+        "type": "(id: string) => HTMLElement | null",
+        "description": "Gets the DOM element for a specific tree item\n@param id - ID of the item"
+      },
+      {
+        "name": "selectUntil",
+        "type": "(id: string) => void",
+        "description": "Selects all items between the last selected item and the specified item\n@param id - ID of the item to select until"
+      },
+      {
+        "name": "getAllChildren",
+        "type": "typeof Tree.getAllChildren",
+        "description": "Helper function to get all child items in a tree or subtree\n@param treeOrChild - Tree or Child instance to get children from\n@param onlyVisible - If true, only returns visible (expanded) children"
+      }
+    ],
+    "properties": [
+      {
+        "name": "collection",
+        "type": "Collection<I>",
+        "description": "The items contained in the tree"
+      },
+      {
+        "name": "multiple",
+        "type": "Multiple",
+        "description": "If `true`, the user can select multiple items holding `Control`/`Meta` or `Shift`"
+      },
+      {
+        "name": "expandOnClick",
+        "type": "boolean",
+        "description": "If `true`, groups (items with children) expand on click"
+      },
+      {
+        "name": "typeaheadTimeout",
+        "type": "number",
+        "description": ""
+      },
+      {
+        "name": "typeahead",
+        "type": "(\n  letter: string,\n) =>\n  | {\n      readonly child: Child<I>\n      readonly value: string\n      readonly typeahead: string\n      readonly current: boolean\n    }\n  | undefined",
+        "description": ""
+      },
+      {
         "name": "expand",
         "type": "(id: string) => void",
         "description": "Expands a specific item\n@param id - ID of the item to expand"
       },
       {
+        "name": "expandAll",
+        "type": "() => void",
+        "description": "Expands all items"
+      },
+      {
         "name": "collapse",
         "type": "(id: string) => void",
         "description": "Collapses a specific item\n@param id - ID of the item to collapse"
+      },
+      {
+        "name": "collapseAll",
+        "type": "() => void",
+        "description": "Collapses all items"
       },
       {
         "name": "toggleExpand",
@@ -105,48 +167,6 @@
         "name": "selectAll",
         "type": "() => void",
         "description": "Selects all visible items.\nIf all items are already selected, clears the selection."
-      },
-      {
-        "name": "getItemId",
-        "type": "(id: string) => string",
-        "description": "Gets the DOM ID for a specific tree item\n@param id - ID of the item"
-      },
-      {
-        "name": "getItemEl",
-        "type": "(id: string) => HTMLElement | null",
-        "description": "Gets the DOM element for a specific tree item\n@param id - ID of the item"
-      },
-      {
-        "name": "selectUntil",
-        "type": "(id: string) => void",
-        "description": "Selects all items between the last selected item and the specified item\n@param id - ID of the item to select until"
-      }
-    ],
-    "properties": [
-      {
-        "name": "collection",
-        "type": "Collection<I>",
-        "description": "The items contained in the tree"
-      },
-      {
-        "name": "multiple",
-        "type": "Multiple",
-        "description": "If `true`, the user can select multiple items holding `Control`/`Meta` or `Shift`"
-      },
-      {
-        "name": "expandOnClick",
-        "type": "boolean",
-        "description": "If `true`, groups (items with children) expand on click"
-      },
-      {
-        "name": "typeaheadTimeout",
-        "type": "number",
-        "description": ""
-      },
-      {
-        "name": "typeahead",
-        "type": "(letter: string) => { child: Child<I>; value: string } | undefined",
-        "description": ""
       },
       {
         "name": "items",
@@ -241,6 +261,16 @@
     "methods": [],
     "properties": [
       {
+        "name": "ids",
+        "type": "{ trigger: string; content: string; arrow: string }",
+        "description": ""
+      },
+      {
+        "name": "invokerRect",
+        "type": "{ x: number; y: number; width: number; height: number } | undefined",
+        "description": ""
+      },
+      {
         "name": "closeOnPointerDown",
         "type": "boolean",
         "description": ""
@@ -267,7 +297,7 @@
       },
       {
         "name": "floatingConfig",
-        "type": "UseFloatingConfig | undefined",
+        "type": "UseFloatingConfig",
         "description": ""
       },
       {
@@ -287,12 +317,12 @@
       },
       {
         "name": "trigger",
-        "type": "{\n  readonly onfocusout: () => Promise<void>\n  readonly \"data-melt-tooltip-trigger\": \"\"\n  readonly id: string\n  readonly \"aria-describedby\": string\n  readonly \"data-open\": \"\" | undefined\n  readonly onpointerdown: () => void\n  readonly onpointerenter: (\n    e: PointerEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly onpointermove: () => void\n  readonly onpointerleave: (\n    e: PointerEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly onfocus: () => void\n  readonly onblur: () => void\n}",
+        "type": "{\n  readonly onfocusout: () => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}`\n  readonly \"data-melt-tooltip-trigger\": \"\"\n  readonly id: string\n  readonly \"aria-describedby\": string\n  readonly \"data-open\": \"\" | undefined\n  readonly onpointerdown: () => void\n  readonly onpointerenter: (\n    e: PointerEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly onpointermove: () => void\n  readonly onpointerleave: (\n    e: PointerEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly onfocus: () => void\n  readonly onblur: () => void\n}",
         "description": ""
       },
       {
         "name": "content",
-        "type": "{\n  readonly onfocusout: () => Promise<void>\n  readonly \"data-melt-tooltip-content\": \"\"\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly role: \"tooltip\"\n  readonly tabindex: -1\n  readonly style: \"overflow: visible;\"\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n  readonly onpointerenter: () => void\n  readonly onpointerleave: () => void\n  readonly onpointerdown: () => void\n}",
+        "type": "{\n  readonly style: string\n  readonly onfocusout: () => Promise<void>\n  readonly \"data-melt-tooltip-content\": \"\"\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly role: \"tooltip\"\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n  readonly onpointerenter: () => void\n  readonly onpointerleave: () => void\n  readonly onpointerdown: () => void\n}",
         "description": ""
       },
       {
@@ -373,9 +403,27 @@
         "description": "The behaviour when a toast is hovered.\nPass in `null` to disable.",
         "defaultValue": "'pause'",
         "optional": true
+      },
+      {
+        "name": "tabHidden",
+        "type": "MaybeGetter<\"pause-all\" | null | undefined>",
+        "description": "The behaviour when the user switches to another tab.\nPass in `null` to disable.",
+        "defaultValue": "'pause-all'",
+        "optional": true
       }
     ],
-    "methods": [],
+    "methods": [
+      {
+        "name": "pauseAll",
+        "type": "() => void",
+        "description": "Pauses all toasts."
+      },
+      {
+        "name": "resumeAll",
+        "type": "() => void",
+        "description": "Resumes all toasts countdowns."
+      }
+    ],
     "properties": [
       {
         "name": "ids",
@@ -398,13 +446,18 @@
         "description": ""
       },
       {
+        "name": "tabHidden",
+        "type": "\"pause-all\" | null",
+        "description": ""
+      },
+      {
         "name": "toasts",
         "type": "Toast<T>[]",
         "description": "The active toasts."
       },
       {
         "name": "addToast",
-        "type": "(props: AddToastProps<T>) => Toast<T>",
+        "type": "(props: AddToastArgs<T>) => Toast<T>",
         "description": "Adds a toast."
       },
       {
@@ -414,7 +467,7 @@
       },
       {
         "name": "updateToast",
-        "type": "(id: string, data: T) => void",
+        "type": "(args: UpdateToastArgs<T>) => void",
         "description": "Updates a toast's data.\n@param id The id of the toast.\n@param data The updated data."
       },
       {
@@ -423,7 +476,7 @@
         "description": "Spread attributes for the container of the toasts."
       }
     ],
-    "propsAlt": "export type ToasterProps = {\n  /**\n   * The delay in milliseconds before the toast closes. Set to 0 to disable.\n   * @default 5000\n   */\n  closeDelay?: MaybeGetter<number | undefined>;\n\n  /**\n   * The sensitivity of the toast for accessibility purposes.\n   * https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-live\n   * @default 'polite'\n   */\n  type?: MaybeGetter<\"assertive\" | \"polite\" | undefined>;\n\n  /**\n   * The behaviour when a toast is hovered.\n   * Pass in `null` to disable.\n   *\n   * @default 'pause'\n   */\n  hover?: MaybeGetter<\"pause\" | \"pause-all\" | null | undefined>;\n};"
+    "propsAlt": "export type ToasterProps = {\n  /**\n   * The delay in milliseconds before the toast closes. Set to 0 to disable.\n   * @default 5000\n   */\n  closeDelay?: MaybeGetter<number | undefined>;\n\n  /**\n   * The sensitivity of the toast for accessibility purposes.\n   * https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-live\n   * @default 'polite'\n   */\n  type?: MaybeGetter<\"assertive\" | \"polite\" | undefined>;\n\n  /**\n   * The behaviour when a toast is hovered.\n   * Pass in `null` to disable.\n   *\n   * @default 'pause'\n   */\n  hover?: MaybeGetter<\"pause\" | \"pause-all\" | null | undefined>;\n\n  /**\n   * The behaviour when the user switches to another tab.\n   * Pass in `null` to disable.\n   *\n   * @default 'pause-all'\n   */\n  tabHidden?: MaybeGetter<\"pause-all\" | null | undefined>;\n};"
   },
   "TagsInput": {
     "constructorProps": [
@@ -707,6 +760,122 @@
     ],
     "propsAlt": "export type TabsProps<T extends string = string> = {\n  /**\n   * If `true`, the value will be changed whenever a trigger is focused.\n   *\n   * @default true\n   */\n  selectWhenFocused?: MaybeGetter<boolean | undefined>;\n  /**\n   * If the the trigger selection should loop when navigating with the arrow keys.\n   *\n   * @default true\n   */\n  loop?: MaybeGetter<boolean | undefined>;\n  /**\n   * The orientation of the tabs.\n   *\n   * @default \"horizontal\"\n   */\n  orientation?: MaybeGetter<\"horizontal\" | \"vertical\" | undefined>;\n  /**\n   * The default value for `tabs.value`\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that `tabs.value` only changes when the getter returns a new value.\n   *\n   */\n  value: MaybeGetter<T>;\n  /**\n   * Called when the `Tabs` instance tries to change the active tab.\n   */\n  onValueChange?: (active: T) => void;\n};"
   },
+  "SpatialMenu": {
+    "constructorProps": [
+      {
+        "name": "highlighted",
+        "type": "MaybeGetter<T | null | undefined>",
+        "description": "The currently highlighted value.",
+        "optional": true
+      },
+      {
+        "name": "onHighlightChange",
+        "type": "((highlighted: T | null) => void) | undefined",
+        "description": "Called when the highlighted value changes.",
+        "optional": true
+      },
+      {
+        "name": "onSelect",
+        "type": "((value: T) => void) | undefined",
+        "optional": true
+      },
+      {
+        "name": "wrap",
+        "type": "MaybeGetter<boolean> | undefined",
+        "description": "Whether navigation should wrap around when reaching the edges.",
+        "defaultValue": "false",
+        "optional": true
+      },
+      {
+        "name": "scrollBehavior",
+        "type": "MaybeGetter<\"auto\" | \"smooth\" | \"instant\" | null> | undefined",
+        "description": "Scroll behavior when highlighting an item with the keyboard.\n`null` to disable scrolling.",
+        "defaultValue": "\"smooth\"",
+        "optional": true
+      },
+      {
+        "name": "toleranceCol",
+        "type": "MaybeGetter<number | null> | undefined",
+        "description": "The maximum distance a the centerX of an item can be in relation\nto the highlighted item to be considered as being on the same column.\n\nSet to `null` to disable.",
+        "defaultValue": "16",
+        "optional": true
+      },
+      {
+        "name": "toleranceRow",
+        "type": "MaybeGetter<number | null> | undefined",
+        "description": "The maximum distance a the centerY of an item can be in relation\nto the highlighted item to be considered as being on the same row.\n\nSet to `null` to disable.",
+        "defaultValue": "16",
+        "optional": true
+      },
+      {
+        "name": "crossAxis",
+        "type": "MaybeGetter<boolean> | undefined",
+        "description": "If `true`, arrow keys will navigate cross-axis as well, if no item\nis available on the current axis.",
+        "defaultValue": "true",
+        "optional": true
+      }
+    ],
+    "methods": [
+      {
+        "name": "getItem",
+        "type": "(\n  value: T,\n  options?: Pick<SpatialMenuItemProps<T>, \"onSelect\" | \"disabled\"> | undefined,\n) => SpatialMenuItem<T>",
+        "description": ""
+      }
+    ],
+    "properties": [
+      {
+        "name": "onSelect",
+        "type": "((value: T) => void) | undefined",
+        "description": ""
+      },
+      {
+        "name": "wrap",
+        "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "scrollBehavior",
+        "type": "\"auto\" | \"smooth\" | \"instant\" | null",
+        "description": ""
+      },
+      {
+        "name": "toleranceCol",
+        "type": "number | null",
+        "description": ""
+      },
+      {
+        "name": "toleranceRow",
+        "type": "number | null",
+        "description": ""
+      },
+      {
+        "name": "crossAxis",
+        "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "selectionMode",
+        "type": "\"keyboard\" | \"mouse\"",
+        "description": ""
+      },
+      {
+        "name": "highlighted",
+        "type": "T | null",
+        "description": ""
+      },
+      {
+        "name": "root",
+        "type": "{\n  readonly [x: symbol]: (node: HTMLElement) => () => void\n  readonly \"data-melt-spatial-menu-root\": \"\"\n  readonly tabindex: 0\n  readonly onkeydown: (e: KeyboardEvent) => void\n}",
+        "description": "The root element."
+      },
+      {
+        "name": "input",
+        "type": "{\n  readonly [x: symbol]: (node: HTMLInputElement) => () => void\n  readonly \"data-melt-spatial-menu-input\": \"\"\n  readonly onkeydown: (e: KeyboardEvent) => void\n}",
+        "description": ""
+      }
+    ],
+    "propsAlt": "export type SpatialMenuProps<T> = {\n  /**\n   * The currently highlighted value.\n   */\n  highlighted?: MaybeGetter<T | null | undefined>;\n\n  /**\n   * Called when the highlighted value changes.\n   */\n  onHighlightChange?: (highlighted: T | null) => void;\n\n  onSelect?: (value: T) => void;\n\n  /**\n   * Whether navigation should wrap around when reaching the edges.\n   * @default false\n   */\n  wrap?: MaybeGetter<boolean>;\n\n  /**\n   * Scroll behavior when highlighting an item with the keyboard.\n   * `null` to disable scrolling.\n   *\n   * @default \"smooth\"\n   */\n  scrollBehavior?: MaybeGetter<\"smooth\" | \"instant\" | \"auto\" | null>;\n\n  /**\n   * The maximum distance a the centerX of an item can be in relation\n   * to the highlighted item to be considered as being on the same column.\n   *\n   * Set to `null` to disable.\n   *\n   * @default 16\n   */\n  toleranceCol?: MaybeGetter<number | null>;\n\n  /**\n   * The maximum distance a the centerY of an item can be in relation\n   * to the highlighted item to be considered as being on the same row.\n   *\n   * Set to `null` to disable.\n   *\n   * @default 16\n   */\n  toleranceRow?: MaybeGetter<number | null>;\n\n  /**\n   * If `true`, arrow keys will navigate cross-axis as well, if no item\n   * is available on the current axis.\n   *\n   * @default true\n   */\n  crossAxis?: MaybeGetter<boolean>;\n};"
+  },
   "Slider": {
     "constructorProps": [
       {
@@ -806,6 +975,11 @@
         "optional": true
       },
       {
+        "name": "focus",
+        "type": "any",
+        "optional": true
+      },
+      {
         "name": "onOpenChange",
         "type": "any",
         "description": "Called when the value is supposed to change.",
@@ -871,6 +1045,12 @@
         "optional": true
       },
       {
+        "name": "onNavigate",
+        "type": "| ((current: T | null, direction: \"next\" | \"prev\") => T | null)\n  | undefined",
+        "description": "Custom navigation handler for virtualized lists.\nWhen provided, this will be used instead of DOM-based navigation.",
+        "optional": true
+      },
+      {
         "name": "typeaheadTimeout",
         "type": "MaybeGetter<number | undefined>",
         "description": "How many time (in ms) the typeahead string is held before it is cleared",
@@ -900,7 +1080,7 @@
       },
       {
         "name": "getOption",
-        "type": "(\n  value: T,\n  options?: { typeahead: string } | undefined,\n) => {\n  readonly \"data-melt-select-option\": \"\"\n  readonly \"data-value\": DataReturn<T>\n  readonly \"data-typeahead\": string | undefined\n  readonly \"aria-hidden\": true | undefined\n  readonly \"aria-selected\": boolean\n  readonly \"data-highlighted\": \"\" | undefined\n  readonly role: \"option\"\n  readonly onmouseover: () => void\n  readonly onclick: () => void\n}",
+        "type": "(\n  value: T,\n  label?: string | undefined,\n) => {\n  readonly \"data-melt-select-option\": \"\"\n  readonly \"data-value\": string\n  readonly \"data-label\": string\n  readonly \"aria-hidden\": true | undefined\n  readonly \"aria-selected\": boolean\n  readonly \"data-highlighted\": \"\" | undefined\n  readonly role: \"option\"\n  readonly tabindex: -1\n  readonly onmouseover: () => void\n  readonly onclick: () => void\n}",
         "description": ""
       }
     ],
@@ -917,7 +1097,7 @@
       },
       {
         "name": "ids",
-        "type": "{ trigger: string; content: string; option: string } & {\n  invoker: string\n  popover: string\n}",
+        "type": "{ trigger: string; content: string; option: string } & {\n  popover: string\n}",
         "description": ""
       },
       {
@@ -927,7 +1107,12 @@
       },
       {
         "name": "typeahead",
-        "type": "(letter: string) => { value: T; current: boolean } | undefined",
+        "type": "(\n  letter: string,\n) => { value: any; typeahead: string; current: boolean } | undefined",
+        "description": ""
+      },
+      {
+        "name": "getOptionLabel",
+        "type": "(value: T) => string",
         "description": ""
       },
       {
@@ -956,17 +1141,22 @@
         "description": ""
       },
       {
+        "name": "label",
+        "type": "{\n  for: string\n  onclick: (\n    e: MouseEvent & { currentTarget: EventTarget & HTMLLabelElement },\n  ) => void\n}",
+        "description": ""
+      },
+      {
         "name": "trigger",
-        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly id: string\n  readonly popovertarget: string\n  readonly onclick: (e: Event) => void\n} & {\n  \"data-melt-select-trigger\": string\n  role: string\n  \"aria-expanded\": boolean\n  \"aria-controls\": string\n  \"aria-owns\": string\n  onkeydown: (e: KeyboardEvent) => void\n}",
+        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  readonly popovertarget: string\n  readonly onclick: (e: Event) => void\n} & {\n  \"data-melt-select-trigger\": string\n  id: string\n  role: string\n  \"aria-expanded\": boolean\n  \"aria-controls\": string\n  \"aria-owns\": string\n  onkeydown: (e: KeyboardEvent) => void\n}",
         "description": ""
       },
       {
         "name": "content",
-        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly ontoggle: (\n    e: ToggleEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n} & {\n  readonly \"data-melt-select-content\": \"\"\n  readonly role: \"listbox\"\n  readonly \"aria-expanded\": boolean\n  readonly \"aria-activedescendant\": string | undefined\n  readonly onkeydown: (e: KeyboardEvent) => void\n}",
+        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly ontoggle: (\n    e: ToggleEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n} & {\n  readonly \"data-melt-select-content\": \"\"\n  readonly role: \"listbox\"\n  readonly \"aria-expanded\": boolean\n  readonly \"aria-activedescendant\": string | undefined\n  readonly onkeydown: (e: KeyboardEvent) => void\n}",
         "description": ""
       }
     ],
-    "propsAlt": "export type SelectProps<T extends string, Multiple extends boolean = false> = Omit<\n  PopoverProps,\n  \"sameWidth\"\n> & {\n  /**\n   * If `true`, multiple options can be selected at the same time.\n   *\n   * @default false\n   */\n  multiple?: MaybeGetter<Multiple | undefined>;\n\n  /**\n   * The value for the Select.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  value?: MaybeMultiple<T, Multiple>;\n  /**\n   * Called when the value is supposed to change.\n   */\n  onValueChange?: OnMultipleChange<T, Multiple>;\n\n  /**\n   * The currently highlighted value.\n   */\n  highlighted?: MaybeGetter<T | null | undefined>;\n\n  /**\n   * Called when the highlighted value changes.\n   */\n  onHighlightChange?: (highlighted: T | null) => void;\n\n  /**\n   * How many time (in ms) the typeahead string is held before it is cleared\n   * @default 500\n   */\n  typeaheadTimeout?: MaybeGetter<number | undefined>;\n\n  /**\n   * If the content should have the same width as the trigger\n   *\n   * @default true\n   */\n  sameWidth?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Determines behavior when scrolling items into view.\n   * Set to null to disable auto-scrolling.\n   *\n   * @default \"nearest\"\n   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView#block\n   */\n  scrollAlignment?: MaybeGetter<\"nearest\" | \"center\" | null | undefined>;\n};"
+    "propsAlt": "export type SelectProps<T, Multiple extends boolean = false> = Omit<PopoverProps, \"sameWidth\"> & {\n  /**\n   * If `true`, multiple options can be selected at the same time.\n   *\n   * @default false\n   */\n  multiple?: MaybeGetter<Multiple | undefined>;\n\n  /**\n   * The value for the Select.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  value?: MaybeMultiple<T, Multiple>;\n  /**\n   * Called when the value is supposed to change.\n   */\n  onValueChange?: OnMultipleChange<T, Multiple>;\n\n  /**\n   * The currently highlighted value.\n   */\n  highlighted?: MaybeGetter<T | null | undefined>;\n\n  /**\n   * Called when the highlighted value changes.\n   */\n  onHighlightChange?: (highlighted: T | null) => void;\n\n  /**\n   * Custom navigation handler for virtualized lists.\n   * When provided, this will be used instead of DOM-based navigation.\n   *\n   * @param current - The currently highlighted item\n   * @param direction - The navigation direction ('next' or 'prev')\n   * @returns The next item to highlight, or null if navigation should be handled by default behavior\n   */\n  onNavigate?: (current: T | null, direction: \"next\" | \"prev\") => T | null;\n\n  /**\n   * How many time (in ms) the typeahead string is held before it is cleared\n   * @default 500\n   */\n  typeaheadTimeout?: MaybeGetter<number | undefined>;\n\n  /**\n   * If the content should have the same width as the trigger\n   *\n   * @default true\n   */\n  sameWidth?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Determines behavior when scrolling items into view.\n   * Set to null to disable auto-scrolling.\n   *\n   * @default \"nearest\"\n   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView#block\n   */\n  scrollAlignment?: MaybeGetter<\"nearest\" | \"center\" | null | undefined>;\n};"
   },
   "RadioGroup": {
     "constructorProps": [
@@ -1038,6 +1228,11 @@
       }
     ],
     "properties": [
+      {
+        "name": "ids",
+        "type": "{\n  root: string\n  item: string\n  \"hidden-input\": string\n  label: string\n}",
+        "description": ""
+      },
       {
         "name": "disabled",
         "type": "boolean",
@@ -1181,27 +1376,32 @@
         "description": "If the popover should close when clicking outside.\nAlternatively, accepts a function that receives the clicked element,\nand returns if the popover should close.",
         "defaultValue": "true",
         "optional": true
+      },
+      {
+        "name": "focus",
+        "type": "{ onOpen?: MaybeGetter<boolean | undefined> } | undefined",
+        "optional": true
       }
     ],
     "methods": [],
     "properties": [
       {
         "name": "ids",
-        "type": "{ invoker: string; popover: string } & {\n  trigger: string\n  content: string\n}",
+        "type": "{ popover: string } & { trigger: string; content: string }",
         "description": ""
       },
       {
         "name": "trigger",
-        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly id: string\n  readonly popovertarget: string\n  readonly onclick: (e: Event) => void\n} & { \"data-melt-popover-trigger\": string }",
+        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  readonly popovertarget: string\n  readonly onclick: (e: Event) => void\n} & { \"data-melt-popover-trigger\": string }",
         "description": "The trigger that toggles the value."
       },
       {
         "name": "content",
-        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly ontoggle: (\n    e: ToggleEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n} & { \"data-melt-popover-content\": string }",
+        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly ontoggle: (\n    e: ToggleEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n} & { \"data-melt-popover-content\": string }",
         "description": ""
       }
     ],
-    "propsAlt": "export type PopoverProps = {\n  /**\n   * If the Popover is open.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  open?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Called when the value is supposed to change.\n   */\n  onOpenChange?: (value: boolean) => void;\n\n  /**\n   * If the popover visibility should be controlled by the user.\n   *\n   * @default false\n   */\n  forceVisible?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Config to be passed to `useFloating`\n   */\n  floatingConfig?: UseFloatingArgs[\"config\"];\n\n  /**\n   * If the popover should have the same width as the trigger\n   *\n   * @default false\n   */\n  sameWidth?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * If the popover should close when clicking escape.\n   *\n   * @default true\n   */\n  closeOnEscape?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * If the popover should close when clicking outside.\n   * Alternatively, accepts a function that receives the clicked element,\n   * and returns if the popover should close.\n   *\n   * @default true\n   */\n  closeOnOutsideClick?: CloseOnOutsideClickProp;\n};"
+    "propsAlt": "export type PopoverProps = {\n  /**\n   * If the Popover is open.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  open?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Called when the value is supposed to change.\n   */\n  onOpenChange?: (value: boolean) => void;\n\n  /**\n   * If the popover visibility should be controlled by the user.\n   *\n   * @default false\n   */\n  forceVisible?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Config to be passed to `useFloating`\n   */\n  floatingConfig?: UseFloatingArgs[\"config\"];\n\n  /**\n   * If the popover should have the same width as the trigger\n   *\n   * @default false\n   */\n  sameWidth?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * If the popover should close when clicking escape.\n   *\n   * @default true\n   */\n  closeOnEscape?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * If the popover should close when clicking outside.\n   * Alternatively, accepts a function that receives the clicked element,\n   * and returns if the popover should close.\n   *\n   * @default true\n   */\n  closeOnOutsideClick?: CloseOnOutsideClickProp;\n\n  focus?: {\n    /**\n     * Which element to focus when the popover opens.\n     * Can be a selector string, an element, or a Getter for those.\n     * If null, the focus remains on the trigger element.\n     *\n     * Defaults to the popover content element.\n     */\n    onOpen?: MaybeGetter<HTMLElement | string | null | undefined>;\n\n    /**\n     * Which element to focus when the popover closes.\n     * Can be a selector string, an element, or a Getter for those.\n     * If null, the focus goes to the document body.\n     *\n     * Defaults to the last used trigger element.\n     */\n    onClose?: MaybeGetter<HTMLElement | string | null | undefined>;\n\n    /**\n     * If focus should be trapped inside the popover content when open.\n     *\n     * @default false\n     */\n    trap?: MaybeGetter<boolean | undefined>;\n  };\n};"
   },
   "PinInput": {
     "constructorProps": [
@@ -1445,6 +1645,11 @@
         "description": ""
       },
       {
+        "name": "ids",
+        "type": "{ input: string; dropzone: string }",
+        "description": ""
+      },
+      {
         "name": "isDragging",
         "type": "boolean",
         "description": ""
@@ -1472,32 +1677,145 @@
     ],
     "propsAlt": "export type FileUploadProps<Multiple extends boolean = false> = {\n  /**\n   * The currently selected files.\n   */\n  selected?: MaybeMultiple<File, Multiple>;\n\n  /**\n   * Callback fired when selected files change\n   */\n  onSelectedChange?: (files: Multiple extends true ? Set<File> : File | undefined) => void;\n\n  /**\n   * Whether to accept multiple files\n   * @default false\n   */\n  multiple?: MaybeGetter<Multiple | undefined>;\n\n  /**\n   * The accepted file types. Can be a MIME type, a MIME group, or a file extension.\n   * Separate multiple types with a comma.\n   * @example 'image/jpeg'\n   * @example 'image/*'\n   * @example '.png, .jpg, .jpeg'\n   */\n  accept?: MaybeGetter<string | undefined>;\n\n  /**\n   * Maximum file size in bytes\n   * @default undefined\n   */\n  maxSize?: MaybeGetter<number | undefined>;\n\n  /**\n   * Whether the file upload is disabled\n   * @default false\n   */\n  disabled?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Custom validate fn. Will be called together with the original validation,\n   * which takes into account the `accept` and `maxSize` props.\n   */\n  validate?: (file: File) => boolean;\n\n  /**\n   * Callback fired when a file fails validation\n   */\n  onError?: (error: FileUploadError) => void;\n\n  /**\n   * Callback fired when a file is accepted\n   */\n  onAccept?: (file: File) => void;\n\n  /**\n   * If true, checks the files contents to avoid duplicate.\n   * It's performance is not tested in large files, so by default its set to false.\n   *\n   * @default false\n   */\n  avoidDuplicates?: MaybeGetter<boolean | undefined>;\n};"
   },
+  "Dialog": {
+    "constructorProps": [
+      {
+        "name": "open",
+        "type": "MaybeGetter<boolean | undefined>",
+        "description": "If the Dialog is open.\n\nWhen passing a getter, it will be used as source of truth,\nmeaning that the value only changes when the getter returns a new value.\n\nOtherwise, if passing a static value, it'll serve as the default value.",
+        "defaultValue": "false",
+        "optional": true
+      },
+      {
+        "name": "onOpenChange",
+        "type": "((value: boolean) => void) | undefined",
+        "description": "Called when the value is supposed to change.",
+        "optional": true
+      },
+      {
+        "name": "closeOnEscape",
+        "type": "MaybeGetter<boolean | undefined>",
+        "description": "If the dialog should close when clicking escape.",
+        "defaultValue": "true",
+        "optional": true
+      },
+      {
+        "name": "closeOnOutsideClick",
+        "type": "MaybeGetter<boolean | undefined>",
+        "description": "If the dialog should close when clicking outside.\nAlternatively, accepts a function that receives the clicked element,\nand returns if the dialog should close.",
+        "defaultValue": "true",
+        "optional": true
+      },
+      {
+        "name": "scrollLock",
+        "type": "MaybeGetter<boolean | undefined>",
+        "description": "If the dialog should lock the document scroll when open.",
+        "defaultValue": "true",
+        "optional": true
+      }
+    ],
+    "methods": [],
+    "properties": [
+      {
+        "name": "closeOnEscape",
+        "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "closeOnOutsideClick",
+        "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "scrollLock",
+        "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "refs",
+        "type": "{\n  get: (key: \"trigger\" | \"content\" | \"overlay\") => HTMLElement | undefined\n  attach: (key: \"trigger\" | \"content\" | \"overlay\") => Attachment<HTMLElement>\n  key: any\n}",
+        "description": ""
+      },
+      {
+        "name": "open",
+        "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "sharedProps",
+        "type": "{ \"data-open\": \"\" | undefined }",
+        "description": ""
+      },
+      {
+        "name": "trigger",
+        "type": "{\n  readonly \"data-open\": \"\" | undefined\n  readonly \"data-melt-dialog-trigger\": \"\"\n  readonly onclick: () => void\n  readonly type: \"button\"\n}",
+        "description": "The trigger element."
+      },
+      {
+        "name": "content",
+        "type": "{\n  readonly \"data-open\": \"\" | undefined\n  readonly \"data-melt-dialog-content\": \"\"\n  readonly onclose: () => void\n}",
+        "description": "The element for the dialog itself."
+      },
+      {
+        "name": "overlay",
+        "type": "{\n  readonly \"data-open\": \"\" | undefined\n  readonly \"data-melt-dialog-overlay\": \"\"\n  readonly popover: \"manual\"\n  readonly \"aria-hidden\": true\n}",
+        "description": "Optional overlay element, to replace dialog::backdrop for animation support"
+      }
+    ],
+    "propsAlt": "export type DialogProps = {\n  /**\n   * If the Dialog is open.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   * @default false\n   */\n  open?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * Called when the value is supposed to change.\n   */\n  onOpenChange?: (value: boolean) => void;\n\n  /**\n   * If the dialog should close when clicking escape.\n   *\n   * @default true\n   */\n  closeOnEscape?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * If the dialog should close when clicking outside.\n   * Alternatively, accepts a function that receives the clicked element,\n   * and returns if the dialog should close.\n   *\n   * @default true\n   */\n  closeOnOutsideClick?: MaybeGetter<boolean | undefined>;\n\n  /**\n   * If the dialog should lock the document scroll when open.\n   *\n   * @default true\n   */\n  scrollLock?: MaybeGetter<boolean | undefined>;\n};"
+  },
   "Combobox": {
     "constructorProps": [
       {
         "name": "open",
-        "type": "any",
+        "type": "MaybeGetter<boolean | undefined>",
         "description": "If the Popover is open.\n\nWhen passing a getter, it will be used as source of truth,\nmeaning that the value only changes when the getter returns a new value.\n\nOtherwise, if passing a static value, it'll serve as the default value.",
         "defaultValue": "false",
         "optional": true
       },
       {
         "name": "onOpenChange",
-        "type": "any",
+        "type": "((value: boolean) => void) | undefined",
         "description": "Called when the value is supposed to change.",
         "optional": true
       },
       {
         "name": "forceVisible",
-        "type": "any",
+        "type": "MaybeGetter<boolean | undefined>",
         "description": "If the popover visibility should be controlled by the user.",
         "defaultValue": "false",
         "optional": true
       },
       {
         "name": "floatingConfig",
-        "type": "any",
+        "type": "UseFloatingConfig | undefined>",
         "description": "Config to be passed to `useFloating`",
+        "optional": true
+      },
+      {
+        "name": "sameWidth",
+        "type": "MaybeGetter<boolean | undefined>",
+        "description": "If the popover should have the same width as the trigger",
+        "defaultValue": "false",
+        "optional": true
+      },
+      {
+        "name": "closeOnEscape",
+        "type": "MaybeGetter<boolean | undefined>",
+        "description": "If the popover should close when clicking escape.",
+        "defaultValue": "true",
+        "optional": true
+      },
+      {
+        "name": "closeOnOutsideClick",
+        "type": "CloseOnOutsideClickProp",
+        "description": "If the popover should close when clicking outside.\nAlternatively, accepts a function that receives the clicked element,\nand returns if the popover should close.",
+        "defaultValue": "true",
+        "optional": true
+      },
+      {
+        "name": "focus",
+        "type": "{ onOpen?: MaybeGetter<boolean | undefined> } | undefined",
         "optional": true
       },
       {
@@ -1521,6 +1839,19 @@
         "optional": true
       },
       {
+        "name": "inputValue",
+        "type": "MaybeGetter<string | undefined>",
+        "description": "The inputValue for the Combobox.\n\nWhen passing a getter, it will be used as source of truth,\nmeaning that the value only changes when the getter returns a new value.\n\nOtherwise, if passing a static value, it'll serve as the default value.",
+        "defaultValue": "false",
+        "optional": true
+      },
+      {
+        "name": "onInputValueChange",
+        "type": "Setter<string> | undefined",
+        "description": "Called when the value is supposed to change.",
+        "optional": true
+      },
+      {
         "name": "highlighted",
         "type": "MaybeGetter<T | null | undefined>",
         "description": "The currently highlighted value.",
@@ -1530,6 +1861,12 @@
         "name": "onHighlightChange",
         "type": "((highlighted: T | null) => void) | undefined",
         "description": "Called when the highlighted value changes.",
+        "optional": true
+      },
+      {
+        "name": "onNavigate",
+        "type": "| ((current: T | null, direction: \"next\" | \"prev\") => T | null)\n  | undefined",
+        "description": "Custom navigation handler for virtualized lists.\nWhen provided, this will be used instead of DOM-based navigation.",
         "optional": true
       },
       {
@@ -1565,8 +1902,8 @@
       },
       {
         "name": "getOption",
-        "type": "(\n  value: T,\n  onSelect?: (() => void) | undefined,\n) => {\n  readonly id: string\n  readonly \"data-melt-combobox-option\": \"\"\n  readonly \"data-value\": DataReturn<T>\n  readonly \"aria-hidden\": true | undefined\n  readonly \"aria-selected\": boolean\n  readonly \"data-highlighted\": \"\" | undefined\n  readonly role: \"option\"\n  readonly onmouseover: () => void\n  readonly onclick: () => void\n}",
-        "description": "Gets the attributes for the option element.\n@param value The value of the option.\n@param onSelect An optional callback to call when the option is selected, overriding the default behavior.\n@returns The attributes for the option element."
+        "type": "(\n  value: T,\n  label?: string | undefined,\n  onSelect?: (() => void) | undefined,\n) => {\n  readonly id: string\n  readonly \"data-melt-combobox-option\": \"\"\n  readonly \"data-value\": string\n  readonly \"data-label\": string\n  readonly \"aria-hidden\": true | undefined\n  readonly \"aria-selected\": boolean\n  readonly \"data-highlighted\": \"\" | undefined\n  readonly tabindex: -1\n  readonly role: \"option\"\n  readonly onmouseover: () => void\n  readonly onclick: () => void\n}",
+        "description": "Gets the attributes for the option element.\n@param value The value of the option.\n@param label The label to display for the option. If not provided, the value will be stringified.\n@param onSelect An optional callback to call when the option is selected, overriding the default behavior.\n@returns The attributes for the option element."
       },
       {
         "name": "getOptionsEls",
@@ -1616,11 +1953,6 @@
         "description": ""
       },
       {
-        "name": "inputValue",
-        "type": "string",
-        "description": ""
-      },
-      {
         "name": "touched",
         "type": "boolean",
         "description": ""
@@ -1632,7 +1964,7 @@
       },
       {
         "name": "ids",
-        "type": "{\n  trigger: string\n  content: string\n  option: string\n  input: string\n} & { invoker: string; popover: string }",
+        "type": "{\n  trigger: string\n  content: string\n  option: string\n  input: string\n} & { popover: string }",
         "description": ""
       },
       {
@@ -1641,8 +1973,18 @@
         "description": ""
       },
       {
+        "name": "getOptionLabel",
+        "type": "(value: T) => string",
+        "description": ""
+      },
+      {
         "name": "value",
         "type": "SelectionStateValue<T, Multiple>",
+        "description": ""
+      },
+      {
+        "name": "inputValue",
+        "type": "string",
         "description": ""
       },
       {
@@ -1651,27 +1993,32 @@
         "description": ""
       },
       {
-        "name": "valueAsString",
-        "type": "string",
+        "name": "label",
+        "type": "{\n  for: string\n  onclick: (\n    e: MouseEvent & { currentTarget: EventTarget & HTMLLabelElement },\n  ) => void\n}",
         "description": ""
       },
       {
         "name": "input",
-        "type": "{\n  readonly \"data-melt-combobox-input\": \"\"\n  readonly id: string\n  readonly role: \"combobox\"\n  readonly \"aria-expanded\": boolean\n  readonly \"aria-controls\": string\n  readonly \"aria-owns\": string\n  readonly onclick: undefined\n  readonly value: string\n  readonly oninput: (e: Event) => void\n  readonly onkeydown: (e: KeyboardEvent) => void\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly popovertarget: string\n}",
+        "type": "{\n  readonly \"data-melt-combobox-input\": \"\"\n  readonly id: string\n  readonly role: \"combobox\"\n  readonly \"aria-expanded\": boolean\n  readonly \"aria-controls\": string\n  readonly \"aria-owns\": string\n  readonly onclick: () => void\n  readonly value: string\n  readonly oninput: (e: Event) => void\n  readonly onkeydown: (e: KeyboardEvent) => void\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  readonly popovertarget: string\n}",
         "description": ""
       },
       {
         "name": "trigger",
-        "type": "{\n  onfocus: (event: FocusEvent) => void\n  onfocusout: (event: FocusEvent) => Promise<void>\n  \"data-melt-combobox-trigger\": string\n  id: string\n  onclick: () => void\n}",
+        "type": "{\n  onfocus: (event: FocusEvent) => void\n  onfocusout: (event: FocusEvent) => Promise<void>\n  style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  \"data-melt-combobox-trigger\": string\n  id: string\n  onclick: () => void\n}",
         "description": ""
       },
       {
         "name": "content",
-        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly ontoggle: (\n    e: ToggleEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n} & {\n  readonly \"data-melt-combobox-content\": \"\"\n  readonly role: \"listbox\"\n  readonly \"aria-expanded\": boolean\n  readonly \"aria-activedescendant\": string | undefined\n}",
+        "type": "{\n  readonly onfocus: (event: FocusEvent) => void\n  readonly onfocusout: (event: FocusEvent) => Promise<void>\n  readonly style: `--melt-invoker-width: ${string}; --melt-invoker-height: ${string}; --melt-invoker-x: ${string}; --melt-invoker-y: ${string}; --melt-popover-available-width: ${string}; --melt-popover-available-height: ${string}`\n  readonly id: string\n  readonly popover: \"manual\"\n  readonly ontoggle: (\n    e: ToggleEvent & { currentTarget: EventTarget & HTMLElement },\n  ) => void\n  readonly tabindex: -1\n  readonly inert: boolean\n  readonly \"data-open\": \"\" | undefined\n} & {\n  readonly \"data-melt-combobox-content\": \"\"\n  readonly role: \"listbox\"\n  readonly \"aria-expanded\": boolean\n  readonly \"aria-activedescendant\": string | undefined\n}",
+        "description": ""
+      },
+      {
+        "name": "valueAsString",
+        "type": "string",
         "description": ""
       }
     ],
-    "propsAlt": "export type ComboboxProps<T extends string, Multiple extends boolean = false> = Omit<\n  PopoverProps,\n  \"closeOnEscape\" | \"closeOnOutsideClick\" | \"sameWidth\"\n> & {\n  /**\n   * If `true`, multiple options can be selected at the same time.\n   *\n   * @default false\n   */\n  multiple?: MaybeGetter<Multiple | undefined>;\n\n  /**\n   * The value for the Combobox.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  value?: MaybeMultiple<T, Multiple>;\n  /**\n   * Called when the value is supposed to change.\n   */\n  onValueChange?: OnMultipleChange<T, Multiple>;\n\n  /**\n   * The currently highlighted value.\n   */\n  highlighted?: MaybeGetter<T | null | undefined>;\n\n  /**\n   * Called when the highlighted value changes.\n   */\n  onHighlightChange?: (highlighted: T | null) => void;\n\n  /**\n   * Determines behavior when scrolling items into view.\n   * Set to null to disable auto-scrolling.\n   *\n   * @default \"nearest\"\n   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView#block\n   */\n  scrollAlignment?: MaybeGetter<\"nearest\" | \"center\" | null | undefined>;\n\n  /**\n   * If the content should have the same width as the trigger\n   *\n   * @default true\n   */\n  sameWidth?: MaybeGetter<boolean | undefined>;\n};"
+    "propsAlt": "export type ComboboxProps<T, Multiple extends boolean = false> = PopoverProps & {\n  /**\n   * If `true`, multiple options can be selected at the same time.\n   *\n   * @default false\n   */\n  multiple?: MaybeGetter<Multiple | undefined>;\n\n  /**\n   * The value for the Combobox.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  value?: MaybeMultiple<T, Multiple>;\n  /**\n   * Called when the value is supposed to change.\n   */\n  onValueChange?: OnMultipleChange<T, Multiple>;\n\n  /**\n   * The inputValue for the Combobox.\n   *\n   * When passing a getter, it will be used as source of truth,\n   * meaning that the value only changes when the getter returns a new value.\n   *\n   * Otherwise, if passing a static value, it'll serve as the default value.\n   *\n   *\n   * @default false\n   */\n  inputValue?: MaybeGetter<string | undefined>;\n  /**\n   * Called when the value is supposed to change.\n   */\n  onInputValueChange?: Setter<string>;\n\n  /**\n   * The currently highlighted value.\n   */\n  highlighted?: MaybeGetter<T | null | undefined>;\n\n  /**\n   * Called when the highlighted value changes.\n   */\n  onHighlightChange?: (highlighted: T | null) => void;\n\n  /**\n   * Custom navigation handler for virtualized lists.\n   * When provided, this will be used instead of DOM-based navigation.\n   *\n   * @param current - The currently highlighted item\n   * @param direction - The navigation direction ('next' or 'prev')\n   * @returns The next item to highlight, or null if navigation should be handled by default behavior\n   */\n  onNavigate?: (current: T | null, direction: \"next\" | \"prev\") => T | null;\n\n  /**\n   * Determines behavior when scrolling items into view.\n   * Set to null to disable auto-scrolling.\n   *\n   * @default \"nearest\"\n   * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView#block\n   */\n  scrollAlignment?: MaybeGetter<\"nearest\" | \"center\" | null | undefined>;\n\n  /**\n   * If the content should have the same width as the trigger\n   *\n   * @default true\n   */\n  sameWidth?: MaybeGetter<boolean | undefined>;\n};"
   },
   "Collapsible": {
     "constructorProps": [
@@ -1699,6 +2046,11 @@
       {
         "name": "disabled",
         "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "ids",
+        "type": "{ trigger: string; content: string }",
         "description": ""
       },
       {
@@ -1760,7 +2112,7 @@
       },
       {
         "name": "image",
-        "type": "{\n  readonly \"data-melt-avatar-image\": \"\"\n  readonly src: string\n  readonly style: `display: ${string}`\n  readonly onload: () => (() => void) | undefined\n  readonly onerror: () => void\n}",
+        "type": "{\n  readonly [x: symbol]: () => void\n  readonly \"data-melt-avatar-image\": \"\"\n  readonly src: string\n  readonly style: `display: ${string}`\n  readonly onload: () => (() => void) | undefined\n  readonly onerror: () => void\n}",
         "description": ""
       },
       {
@@ -1836,6 +2188,11 @@
       {
         "name": "disabled",
         "type": "boolean",
+        "description": ""
+      },
+      {
+        "name": "ids",
+        "type": "{\n  root: string\n  item: string\n  trigger: string\n  content: string\n  heading: string\n}",
         "description": ""
       },
       {

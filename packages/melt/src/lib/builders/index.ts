@@ -15,3 +15,6 @@ export * from "./Toaster.svelte";
 export * from "./Toggle.svelte";
 export * from "./Tooltip.svelte";
 export * from "./Tree.svelte";
+export * from "./SpatialMenu.svelte";
+
+export * from './Dialog.svelte';

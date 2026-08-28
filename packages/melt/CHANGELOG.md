@@ -1,5 +1,205 @@
 # melt
 
+## 0.44.0
+
+### Minor Changes
+
+- dialog: animation support ([`5f7430d`](https://github.com/melt-ui/next-gen/commit/5f7430dfe9fa7dfe7d70c1b7eff09beb52c5b1d2))
+
+### Patch Changes
+
+- dialog: improve selection detection ([`df556ee`](https://github.com/melt-ui/next-gen/commit/df556ee73daf81e62ef86c8e8c8c553229032e72))
+
+- avatar: remove effects ([`b3a6036`](https://github.com/melt-ui/next-gen/commit/b3a60360c00620680e1da31c95c5fd2e42609986))
+
+## 0.43.0
+
+### Minor Changes
+
+- feat: add dialog ([`b2e7456`](https://github.com/melt-ui/next-gen/commit/b2e74566ab6603111809b35808cbfa705e157d2b))
+
+## 0.42.0
+
+### Minor Changes
+
+- Tree: add collapseAll and expandAll functions ([`67306a5`](https://github.com/melt-ui/next-gen/commit/67306a5ffe560da088ebdda9d99fe82230b8c7da))
+
+## 0.41.0
+
+### Minor Changes
+
+- combobox: allow for more props ([`ebd80bb`](https://github.com/melt-ui/next-gen/commit/ebd80bbb7bcfafee8ae1a15c46d7bb774561f078))
+
+## 0.40.2
+
+### Patch Changes
+
+- Fix `onNavigate` callback behavior in Combobox and Select components ([`be3bf49`](https://github.com/melt-ui/next-gen/commit/be3bf49a69cd3123993bad19b3d05facd1e80d63))
+
+  Previously, the `onNavigate` callback would only handle custom navigation and never fall back to default behavior when returning `null`. Now correctly implements the documented behavior:
+
+  - When `onNavigate` returns a value: uses that value for navigation
+  - When `onNavigate` returns `null`: falls back to default DOM-based navigation
+
+  This allows for more flexible navigation handling, such as selective override of navigation behavior in specific scenarios while maintaining default behavior in others.
+
+## 0.40.1
+
+### Patch Changes
+
+- fix(toaster): effect used in constructor ([#173](https://github.com/melt-ui/next-gen/pull/173))
+
+## 0.40.0
+
+### Minor Changes
+
+- Add `onNavigate` prop to Combobox and Select components for virtualization support ([`a11b306`](https://github.com/melt-ui/next-gen/commit/a11b306de71c5e8856c4c675b761eff42a8419df))
+
+  - **Combobox**: Added optional `onNavigate` callback to enable custom navigation logic for virtualized lists
+  - **Select**: Added optional `onNavigate` callback to enable custom navigation logic for virtualized lists
+
+  The `onNavigate` prop allows virtualization libraries to handle arrow key navigation properly by providing the full dataset instead of relying on DOM-queried options. This fixes wrap-around behavior where navigation would only cycle through currently rendered items instead of the complete list.
+
+  **Usage:**
+
+  ```typescript
+  const combobox = new Combobox({
+  	onNavigate: (current, direction) => {
+  		// Handle navigation with full dataset
+  		const currentIndex = fullDataset.findIndex((item) => item === current);
+  		if (direction === "next") {
+  			return fullDataset[(currentIndex + 1) % fullDataset.length];
+  		} else {
+  			return fullDataset[(currentIndex - 1 + fullDataset.length) % fullDataset.length];
+  		}
+  	},
+  });
+  ```
+
+  This is a non-breaking change - when `onNavigate` is not provided, both components fall back to their existing DOM-based navigation behavior.
+
+## 0.39.0
+
+### Minor Changes
+
+- toaster: add `pauseAll()` and `resumeAll()` functions ([#145](https://github.com/melt-ui/next-gen/pull/145))
+
+## 0.38.1
+
+### Patch Changes
+
+- combobox: fix focus ([`a7932e6`](https://github.com/melt-ui/next-gen/commit/a7932e69ed57232664910cf8d1a5832acf43328f))
+
+## 0.38.0
+
+### Minor Changes
+
+- spatial menu: add more props and change behaviour ([`b547c05`](https://github.com/melt-ui/next-gen/commit/b547c05b0a4f5fbf077c6129400b7593dc4bc063))
+
+### Patch Changes
+
+- popover: fix no el when programmatically opening ([`bdfbdcf`](https://github.com/melt-ui/next-gen/commit/bdfbdcf3742305db66db481dfd55aa570cf6edf7))
+
+- pininput: fix callstack overflow on input ([#158](https://github.com/melt-ui/next-gen/pull/158))
+
+## 0.37.0
+
+### Minor Changes
+
+- popover: focus management ([#160](https://github.com/melt-ui/next-gen/pull/160))
+
+- popover: allow multiple triggers ([#160](https://github.com/melt-ui/next-gen/pull/160))
+
+### Patch Changes
+
+- replace nanoid and crypto randomUUID with local impl ([#160](https://github.com/melt-ui/next-gen/pull/160))
+
+## 0.36.0
+
+### Minor Changes
+
+- feat: add spatial menu ([#155](https://github.com/melt-ui/next-gen/pull/155))
+
+## 0.35.3
+
+### Patch Changes
+
+- select & combobox: remove generic restriction ([`4549eb9`](https://github.com/melt-ui/next-gen/commit/4549eb948ff9f4618f09dc9cbefe4a9ca65509b5))
+
+## 0.35.2
+
+### Patch Changes
+
+- tooltip: fix effects ([#152](https://github.com/melt-ui/next-gen/pull/152))
+
+- select: align label storage with combobox ([#152](https://github.com/melt-ui/next-gen/pull/152))
+
+## 0.35.1
+
+### Patch Changes
+
+- combobox: fix valueAsString ([`ff3067d`](https://github.com/melt-ui/next-gen/commit/ff3067d9403ebd17e933b6d3685df44d67080e11))
+
+## 0.35.0
+
+### Minor Changes
+
+- select & combobox: label ([#148](https://github.com/melt-ui/next-gen/pull/148))
+
+- select & combobox: accept non-string values ([#148](https://github.com/melt-ui/next-gen/pull/148))
+
+## 0.34.0
+
+### Minor Changes
+
+- all: call onChange fns even if value stays the same ([`6432a08`](https://github.com/melt-ui/next-gen/commit/6432a089b8e774a85e65b226cbd1fc79b76f977e))
+
+- update svelte version ([`62d8920`](https://github.com/melt-ui/next-gen/commit/62d89201242e16d8fe85c5e0b6e1f5963446cf58))
+
+## 0.33.0
+
+### Minor Changes
+
+- feat: allow modifiying all ids (closes #135) ([`8833e57`](https://github.com/melt-ui/next-gen/commit/8833e574b74914c96e7b11d7a6b7043d2f2f95b2))
+
+## 0.32.0
+
+### Minor Changes
+
+- toast: add id arg to `addToast` (closes #128) ([`3fbcbb2`](https://github.com/melt-ui/next-gen/commit/3fbcbb28ddfcaf1b0ef26db60eca546c2dce8dde))
+
+- toaster: add more args to `updateToast` (closes #127) ([`9831c2c`](https://github.com/melt-ui/next-gen/commit/9831c2c90c1276d78c5709f2de3824446ba0019d))
+
+## 0.31.0
+
+### Minor Changes
+
+- popover-based: add available dimensions to css vars ([`f5ab1aa`](https://github.com/melt-ui/next-gen/commit/f5ab1aae441499320f06bfe00d368b2b620b4224))
+
+## 0.30.1
+
+### Patch Changes
+
+- fix: select content not always being focused ([`46cb901`](https://github.com/melt-ui/next-gen/commit/46cb901610789530294963aaee57bef9a80e61b3))
+
+## 0.30.0
+
+### Minor Changes
+
+- feat: add invoker rect css vars (closes #131) ([`6ed4e4b`](https://github.com/melt-ui/next-gen/commit/6ed4e4bdf70fa2bd3b066b60588625bc95bc633d))
+
+### Patch Changes
+
+- fix: change role of Progress from 'meter' to 'progressbar' ([`6ed4e4b`](https://github.com/melt-ui/next-gen/commit/6ed4e4bdf70fa2bd3b066b60588625bc95bc633d))
+
+- select, combobox: add tabindex -1 to option elements ([`c792815`](https://github.com/melt-ui/next-gen/commit/c792815def04f6053e6bf78be2f8fde7de50235e))
+
+## 0.29.3
+
+### Patch Changes
+
+- remove console log ([`1ebf74f`](https://github.com/melt-ui/next-gen/commit/1ebf74f977171e9ae4a88ae64fa5ad75e10dbba4))
+
 ## 0.29.2
 
 ### Patch Changes

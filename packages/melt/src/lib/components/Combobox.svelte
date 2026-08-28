@@ -1,12 +1,13 @@
-<script lang="ts" generics="T extends string, Multiple extends boolean">
-	import { getters } from "$lib/utils/getters.svelte.js";
+<script lang="ts" generics="T, Multiple extends boolean">
+	import { getters } from "../utils/getters.svelte";
 	import { type Snippet } from "svelte";
 	import { Combobox as Builder, type ComboboxProps } from "../builders/Combobox.svelte";
 	import type { ComponentProps } from "../types";
 
-	type Props = Omit<ComponentProps<ComboboxProps<T, Multiple>>, "multiple"> & {
+	type Props = Omit<ComponentProps<ComboboxProps<T, Multiple>>, "multiple" | "onNavigate"> & {
 		children: Snippet<[Builder<T, Multiple>]>;
 		multiple?: Multiple;
+		onNavigate?: (current: T | null, direction: "next" | "prev") => T | null;
 	};
 
 	let { value = $bindable(), highlighted = $bindable(), children, ...rest }: Props = $props();
@@ -21,6 +22,11 @@
 			highlighted = v as unknown as any;
 		},
 		...getters({ ...rest }),
+		focus: {
+			...getters(rest).focus,
+		},
+		// onNavigate should not be wrapped in a getter since it's a callback function
+		onNavigate: rest.onNavigate,
 	});
 </script>
 

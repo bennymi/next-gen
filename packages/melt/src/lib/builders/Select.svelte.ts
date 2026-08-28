@@ -1,5 +1,7 @@
+import { Synced } from "$lib/Synced.svelte";
 import type { MaybeGetter } from "$lib/types";
-import { dataAttr } from "$lib/utils/attribute";
+import { findNext, findPrev, mapAndFilter } from "$lib/utils/array";
+import { dataAttr, idAttr } from "$lib/utils/attribute";
 import { extract } from "$lib/utils/extract";
 import { createBuilderMetadata } from "$lib/utils/identifiers";
 import { isHtmlElement } from "$lib/utils/is";
@@ -10,12 +12,13 @@ import {
 	type MaybeMultiple,
 	type OnMultipleChange,
 } from "$lib/utils/selection-state.svelte";
+import { unique } from "$lib/utils/string";
 import { createTypeahead, letterRegex } from "$lib/utils/typeahead.svelte";
+import { dequal } from "dequal";
 import { tick } from "svelte";
-import type { HTMLAttributes } from "svelte/elements";
+import type { HTMLAttributes, HTMLLabelAttributes } from "svelte/elements";
 import { BasePopover, type PopoverProps } from "./Popover.svelte";
-import { findNext, findPrev } from "$lib/utils/array";
-import { Synced } from "$lib/Synced.svelte";
+import { createAttachmentKey } from "svelte/attachments";
 
 const { dataAttrs, dataSelectors, createIds } = createBuilderMetadata("select", [
 	"trigger",
@@ -23,10 +26,7 @@ const { dataAttrs, dataSelectors, createIds } = createBuilderMetadata("select", 
 	"option",
 ]);
 
-export type SelectProps<T extends string, Multiple extends boolean = false> = Omit<
-	PopoverProps,
-	"sameWidth"
-> & {
+export type SelectProps<T, Multiple extends boolean = false> = Omit<PopoverProps, "sameWidth"> & {
 	/**
 	 * If `true`, multiple options can be selected at the same time.
 	 *
@@ -62,6 +62,16 @@ export type SelectProps<T extends string, Multiple extends boolean = false> = Om
 	onHighlightChange?: (highlighted: T | null) => void;
 
 	/**
+	 * Custom navigation handler for virtualized lists.
+	 * When provided, this will be used instead of DOM-based navigation.
+	 *
+	 * @param current - The currently highlighted item
+	 * @param direction - The navigation direction ('next' or 'prev')
+	 * @returns The next item to highlight, or null if navigation should be handled by default behavior
+	 */
+	onNavigate?: (current: T | null, direction: "next" | "prev") => T | null;
+
+	/**
 	 * How many time (in ms) the typeahead string is held before it is cleared
 	 * @default 500
 	 */
@@ -84,8 +94,7 @@ export type SelectProps<T extends string, Multiple extends boolean = false> = Om
 	scrollAlignment?: MaybeGetter<"nearest" | "center" | null | undefined>;
 };
 
-export class Select<T extends string, Multiple extends boolean = false> extends BasePopover {
-	/* Props */
+export class Select<T, Multiple extends boolean = false> extends BasePopover {
 	#props!: SelectProps<T, Multiple>;
 	multiple = $derived(extract(this.#props.multiple, false as Multiple));
 	scrollAlignment = $derived(extract(this.#props.scrollAlignment, "nearest"));
@@ -101,19 +110,18 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 		createTypeahead({
 			timeout: this.#props.typeaheadTimeout,
 			getItems: () => {
-				return this.#getOptionsEls().reduce(
-					(acc, curr) => {
-						if (!curr.dataset.value) return acc;
-						return [
-							...acc,
-							{
-								value: curr.dataset.value as T,
-								typeahead: curr.dataset.typeahead,
-								current: curr.dataset.value === this.highlighted,
-							},
-						];
+				return mapAndFilter(
+					this.#getOptionsEls(),
+					(curr) => {
+						return {
+							value: curr.dataset.value ? JSON.parse(curr.dataset.value ?? "") : ("" as T),
+							typeahead: curr.dataset.label as string,
+							current: curr.dataset.value === JSON.stringify(this.highlighted),
+						};
 					},
-					[] as Array<{ value: T; current: boolean }>,
+					(v) => {
+						return !!v.value;
+					},
 				);
 			},
 		}),
@@ -140,6 +148,9 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 				const content = document.getElementById(this.ids.content);
 				if (!content) return;
 				content.focus();
+				tick().then(() => {
+					content.focus();
+				});
 			},
 		});
 
@@ -160,10 +171,23 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 		const newIds = createIds();
 		this.ids = {
 			...oldIds,
-			trigger: oldIds.invoker,
+			trigger: newIds.trigger,
 			content: oldIds.popover,
 			option: newIds.option,
 		};
+	}
+
+	getOptionLabel = (value: T) => {
+		const key = unique(value);
+		if (this.#valueLabelMap.has(key)) {
+			return this.#valueLabelMap.get(key)!;
+		}
+
+		return typeof value === "string" ? (value as string) : "";
+	};
+
+	#setOptionLabel(value: T, label: string) {
+		return this.#valueLabelMap.set(unique(value), label);
 	}
 
 	get value() {
@@ -183,7 +207,7 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 	}
 
 	get valueAsString() {
-		return this.#value.toArray().join(", ");
+		return this.#value.toArray().map(this.getOptionLabel).join(", ");
 	}
 
 	isSelected = (value: T) => {
@@ -203,9 +227,31 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 		});
 	};
 
+	get label() {
+		return {
+			for: this.ids.trigger,
+			onclick: (e) => {
+				e.preventDefault();
+				document.getElementById(this.ids.trigger)?.focus();
+			},
+		} satisfies HTMLLabelAttributes;
+	}
+
+	#triggerAttachment = {
+		[createAttachmentKey()]: (node) => {
+			this.triggerEl = node;
+			return () => {
+				if (this.triggerEl === node) {
+					this.triggerEl = null;
+				}
+			};
+		},
+	} as const satisfies HTMLAttributes<HTMLElement>;
+
 	get trigger() {
 		return Object.assign(super.getInvoker(), {
 			[dataAttrs.trigger]: "",
+			id: this.ids.trigger,
 			role: "combobox",
 			"aria-expanded": this.open,
 			"aria-controls": this.ids.content,
@@ -231,6 +277,7 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 					}
 				}
 			},
+			...this.#triggerAttachment,
 		});
 	}
 
@@ -296,18 +343,23 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 	}
 
 	getOptionId(value: T) {
-		return `${this.ids.content}-option-${dataAttr(value)}`;
+		return idAttr(unique(value));
 	}
 
-	getOption(value: T, options?: { typeahead: string }) {
+	#valueLabelMap = new Map<string, string>();
+
+	getOption(value: T, label?: string) {
+		if (label) this.#setOptionLabel(value, label);
+
 		return {
 			[dataAttrs.option]: "",
-			"data-value": dataAttr(value),
-			"data-typeahead": dataAttr(options?.typeahead),
+			"data-value": dataAttr(JSON.stringify(value)),
+			"data-label": dataAttr(label ?? `${value}`),
 			"aria-hidden": this.open ? undefined : true,
 			"aria-selected": this.#value.has(value),
-			"data-highlighted": dataAttr(this.highlighted === value),
+			"data-highlighted": dataAttr(dequal(this.highlighted, value)),
 			role: "option",
+			tabindex: -1,
 			onmouseover: () => {
 				this.highlighted = value;
 			},
@@ -326,7 +378,7 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 
 	#highlight(el: HTMLElement) {
 		if (!el.dataset.value) return;
-		this.highlighted = el.dataset.value as T;
+		this.highlighted = JSON.parse(el.dataset.value) as T;
 
 		if (this.scrollAlignment !== null) {
 			el.scrollIntoView({ block: this.scrollAlignment });
@@ -334,14 +386,46 @@ export class Select<T extends string, Multiple extends boolean = false> extends 
 	}
 
 	#highlightNext() {
+		if (this.#props.onNavigate) {
+			const next = this.#props.onNavigate(this.highlighted, "next");
+			if (next !== null) {
+				this.highlighted = next;
+				// Try to scroll the element into view if it exists in DOM
+				const id = this.getOptionId(next);
+				const el = document.getElementById(id);
+				if (el && this.scrollAlignment !== null) {
+					el.scrollIntoView({ block: this.scrollAlignment });
+				}
+				return;
+			}
+			// Fall through to default behavior when null is returned
+		}
+
+		// Fallback to current DOM-based implementation
 		const options = this.#getOptionsEls();
-		const next = findNext(options, (o) => o.dataset.value === this.highlighted);
+		const next = findNext(options, (o) => o.dataset.value === JSON.stringify(this.highlighted));
 		if (isHtmlElement(next)) this.#highlight(next);
 	}
 
 	#highlightPrev() {
+		if (this.#props.onNavigate) {
+			const prev = this.#props.onNavigate(this.highlighted, "prev");
+			if (prev !== null) {
+				this.highlighted = prev;
+				// Try to scroll the element into view if it exists in DOM
+				const id = this.getOptionId(prev);
+				const el = document.getElementById(id);
+				if (el && this.scrollAlignment !== null) {
+					el.scrollIntoView({ block: this.scrollAlignment });
+				}
+				return;
+			}
+			// Fall through to default behavior when null is returned
+		}
+
+		// Fallback to current DOM-based implementation
 		const options = this.#getOptionsEls();
-		const prev = findPrev(options, (o) => o.dataset.value === this.highlighted);
+		const prev = findPrev(options, (o) => o.dataset.value === JSON.stringify(this.highlighted));
 		if (isHtmlElement(prev)) this.#highlight(prev);
 	}
 
