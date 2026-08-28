@@ -8,7 +8,7 @@ import { kbd } from "$lib/utils/keyboard";
 import { nanoid } from "nanoid";
 import { onClickOutside } from "runed";
 import { tick } from "svelte";
-import type { ChangeEventHandler, ClipboardEventHandler, EventHandler, FormEventHandler, HTMLButtonAttributes, HTMLInputAttributes, KeyboardEventHandler } from "svelte/elements";
+import type { ClipboardEventHandler, EventHandler, FormEventHandler, HTMLButtonAttributes, HTMLInputAttributes, KeyboardEventHandler } from "svelte/elements";
 
 const { dataAttrs, dataSelectors, createIds } = createBuilderMetadata('tags-input', ['root', 'input', 'tag', 'delete-trigger', 'edit']);
 

@@ -818,7 +818,7 @@
     "methods": [
       {
         "name": "getItem",
-        "type": "(\n  value: T,\n  options?: Pick<SpatialMenuItemProps<T>, \"onSelect\" | \"disabled\"> | undefined,\n) => SpatialMenuItem<T>",
+        "type": "(\n  value: T,\n  options?: Pick<SpatialMenuItemProps<T>, \"disabled\" | \"onSelect\"> | undefined,\n) => SpatialMenuItem<T>",
         "description": ""
       }
     ],
